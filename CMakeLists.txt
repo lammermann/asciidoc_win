@@ -1,0 +1,123 @@
+cmake_minimum_required (VERSION 2.6.0 FATAL_ERROR)
+set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
+
+project(asciidoc_win)
+
+set(CPACK_PACKAGE_VERSION "8.6.6")
+find_package(PythonInterp REQUIRED)
+
+if(DEFINED PYINSTALLER_MAKESPEC_FILE)
+    set(PYINSTALLER_MAKESPEC_FILE ${PYINSTALLER_MAKESPEC_FILE}
+        CACHE FILEPATH "pyinstaller makespec script")
+else()
+    set(PYINSTALLER_MAKESPEC_FILE PYINSTALLER_MAKESPEC_FILE-NOTFOUND
+        CACHE FILEPATH "pyinstaller makespec script")
+    message(ERROR "Could not find pyinstaller makespec script!")
+endif()
+if(DEFINED PYINSTALLER_BUILD_FILE)
+    set(PYINSTALLER_BUILD_FILE ${PYINSTALLER_BUILD_FILE}
+        CACHE FILEPATH "pyinstaller build script")
+else()
+    set(PYINSTALLER_BUILD_FILE PYINSTALLER_BUILD_FILE-NOTFOUND
+        CACHE FILEPATH "pyinstaller build script")
+    message(ERROR "Could not find pyinstaller build script!")
+endif()
+
+set(ASCIIDOC_DIR "${PROJECT_SOURCE_DIR}/asciidoc-${CPACK_PACKAGE_VERSION}/")
+
+file(GLOB_RECURSE pysrc "${CMAKE_CURRENT_SOURCE_DIR}/*.py")
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/asciidoc.spec
+    COMMAND ${PYTHON_EXECUTABLE}
+    ARGS ${PYINSTALLER_MAKESPEC_FILE} --onefile
+    ${ASCIIDOC_DIR}/asciidoc.py
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${pysrc}
+    )
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/dist/asciidoc.exe
+    COMMAND ${PYTHON_EXECUTABLE}
+    ARGS ${PYINSTALLER_BUILD_FILE} asciidoc.spec
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/asciidoc.spec
+    )
+add_custom_target(asciidoc
+    ALL
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/dist/asciidoc.exe
+    )
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/a2x.spec
+    COMMAND ${PYTHON_EXECUTABLE}
+    ARGS ${PYINSTALLER_MAKESPEC_FILE} --onefile
+    ${ASCIIDOC_DIR}/a2x.py
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${pysrc}
+    )
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/dist/a2x.exe
+    COMMAND ${PYTHON_EXECUTABLE}
+    ARGS ${PYINSTALLER_BUILD_FILE} a2x.spec
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/a2x.spec
+    )
+add_custom_target(a2x
+    ALL
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/dist/a2x.exe
+    )
+
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dist/asciidoc.exe
+    ${CMAKE_CURRENT_BINARY_DIR}/dist/a2x.exe
+    DESTINATION bin
+    )
+
+file(GLOB conf_files "${ASCIIDOC_DIR}/*.conf")
+install(FILES ${conf_files} 
+    DESTINATION bin
+    PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE
+    )
+install (DIRECTORY "${ASCIIDOC_DIR}/doc"
+    DESTINATION bin
+    FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE
+    WORLD_READ
+    )
+install (DIRECTORY "${ASCIIDOC_DIR}/dblatex"
+    DESTINATION bin
+    FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE
+    WORLD_READ
+    )
+install (DIRECTORY "${ASCIIDOC_DIR}/docbook-xsl"
+    DESTINATION bin
+    FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE
+    WORLD_READ
+    )
+install (DIRECTORY "${ASCIIDOC_DIR}/filters"
+    DESTINATION bin
+    FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE
+    WORLD_READ
+    )
+install (DIRECTORY "${ASCIIDOC_DIR}/images"
+    DESTINATION bin
+    FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE
+    WORLD_READ
+    )
+install (DIRECTORY "${ASCIIDOC_DIR}/javascripts"
+    DESTINATION bin
+    FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE
+    WORLD_READ
+    )
+install (DIRECTORY "${ASCIIDOC_DIR}/stylesheets"
+    DESTINATION bin
+    FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE
+    WORLD_READ
+    )
+
+set(CPACK_RESOURCE_FILE_LICENSE "${ASCIIDOC_DIR}/COPYING")
+set(CPACK_NSIS_MODIFY_PATH ON)
+#set(CPACK_PACKAGE_EXECUTABLES "asciidoc;asciidoc;a2x;a2x")
+
+include (CPack)
+
+# vim: filetype=cmake:expandtab:shiftwidth=4:tabstop=8:softtabstop=4
+# vim: textwidth=80:fdm=marker
