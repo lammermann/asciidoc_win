@@ -3,7 +3,7 @@ set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
 
 project(asciidoc_win)
 
-set(CPACK_PACKAGE_VERSION "8.6.6")
+set(CPACK_PACKAGE_VERSION "8.6.7")
 find_package(PythonInterp REQUIRED)
 
 if(DEFINED PYINSTALLER_MAKESPEC_FILE)
@@ -25,7 +25,7 @@ endif()
 
 set(ASCIIDOC_DIR "${PROJECT_SOURCE_DIR}/asciidoc-${CPACK_PACKAGE_VERSION}/")
 
-file(GLOB_RECURSE pysrc "${CMAKE_CURRENT_SOURCE_DIR}/*.py")
+file(GLOB_RECURSE pysrc "${ASCIIDOC_DIR}/*.py")
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/asciidoc.spec
     COMMAND ${PYTHON_EXECUTABLE}
